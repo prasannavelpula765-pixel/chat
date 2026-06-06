@@ -766,6 +766,9 @@
     let localStream = null; let peerConnection = null;
     let callingTimerInterval = null; let callingTimerSeconds = 0; let activeCallType = null;
     const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+    
+    // Backend API Configuration
+    const API_BASE_URL = 'http://localhost:5000/api';
 
     const loginPage = document.getElementById('loginPage');
     const chatPage = document.getElementById('chatPage');
@@ -796,7 +799,7 @@
     const localVideoWrapper = document.getElementById('localVideoWrapper');
 
     function applicationInitializeLifecycle() {
-        loadChatMessagesStore();
+        loadChatMessagesFromServer();
         refreshStatusStoriesWidgets();
         evaluateIncomingMessageSeenStatus();
         renderMessagesTrackEngine();
@@ -822,13 +825,15 @@
             const oppositeKey = Object.keys(users).find(k => k !== matchedKey);
             otherUser = users[oppositeKey];
 
+            // Mark user as online
+            markUserOnline(currentUser.id);
+            
             loginPage.style.display = 'none';
             chatPage.classList.add('active');
             contactName.textContent = otherUser.name;
             contactAvatar.textContent = otherUser.avatar;
             document.getElementById('myStatusAvatar').textContent = currentUser.avatar;
 
-            localStorage.setItem(`active_${currentUser.id}`, 'true');
             userIdInput.value = ''; passwordInput.value = '';
             applicationInitializeLifecycle();
             messageInput.focus();
@@ -839,8 +844,7 @@
 
     logoutBtn.addEventListener('click', function() {
         if (confirm('Log out from active system channel?')) {
-            localStorage.setItem(`lastSeen_${currentUser.id}`, Date.now().toString());
-            localStorage.removeItem(`active_${currentUser.id}`);
+            markUserOffline(currentUser.id);
             currentUser = null; otherUser = null; messages = [];
             loginPage.style.display = 'flex';
             chatPage.classList.remove('active');
@@ -850,35 +854,29 @@
     function backgroundPollingSyncPulse() {
         if (!currentUser || !otherUser) return;
         
-        const isTargetOnline = localStorage.getItem(`active_${otherUser.id}`) === 'true';
-        if (isTargetOnline) {
-            contactStatus.innerHTML = `<span style="width:8px; height:8px; background:#25d366; display:inline-block; border-radius:50%;"></span> Online`;
-        } else {
-            const ts = localStorage.getItem(`lastSeen_${otherUser.id}`);
-            contactStatus.textContent = ts ? `Last seen at ${new Date(parseInt(ts)).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}` : 'Offline';
-        }
-
-        const rawStore = localStorage.getItem('chatMessages_suite');
-        if (rawStore) {
-            const comparativeObj = JSON.parse(rawStore);
-            if (JSON.stringify(comparativeObj) !== JSON.stringify(messages)) {
-                messages = comparativeObj;
-                evaluateIncomingMessageSeenStatus();
-                renderMessagesTrackEngine();
-            }
-        }
-
-        if (isTargetOnline) {
-            let updated = false;
-            messages.forEach(m => {
-                if (m.sender === currentUser.id && m.status === 'pending') {
-                    m.status = 'delivered';
-                    if (!m.deliveredTimestamp) m.deliveredTimestamp = Date.now();
-                    updated = true;
+        // Check if other user is online
+        fetch(`${API_BASE_URL}/user/status?userId=${otherUser.id}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.online) {
+                    contactStatus.innerHTML = `<span style="width:8px; height:8px; background:#25d366; display:inline-block; border-radius:50%;"></span> Online`;
+                } else {
+                    contactStatus.textContent = 'Offline';
                 }
-            });
-            if (updated) commitMessagesToLocalStorage();
-        }
+            })
+            .catch(err => console.error('Error checking user status:', err));
+
+        // Fetch messages from server
+        fetch(`${API_BASE_URL}/messages/get?userId=${currentUser.id}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && JSON.stringify(data.messages) !== JSON.stringify(messages)) {
+                    messages = data.messages;
+                    evaluateIncomingMessageSeenStatus();
+                    renderMessagesTrackEngine();
+                }
+            })
+            .catch(err => console.error('Error fetching messages:', err));
 
         refreshStatusStoriesWidgets();
     }
@@ -991,30 +989,36 @@
        TEXT CONVERSATIONAL HANDLING ENGINES
        ======================================================================== */
     function dispatchMessagePayload(textData, payloadType, resourceUrl, optionalReplyId = null) {
-        const targetOnline = localStorage.getItem(`active_${otherUser.id}`) === 'true';
-        const currentTimeStamp = Date.now();
         const activeReplyAnchor = optionalReplyId || currentReplyTargetId;
 
         const newMsgObject = {
-            id: currentTimeStamp, 
             sender: currentUser.id, 
             text: textData, 
             msgType: payloadType, 
             mediaUrl: resourceUrl,
-            timestamp: currentTimeStamp, // Message Send Time
-            sendTimestamp: currentTimeStamp,
-            deliveredTimestamp: targetOnline ? currentTimeStamp : null, // Message Delivery Time
-            seenTimestamp: null, // Message Seen Time
-            status: targetOnline ? 'delivered' : 'pending',
-            seenBy: [], 
-            replyToId: activeReplyAnchor, 
-            hiddenForUsers: []
+            replyToId: activeReplyAnchor
         };
 
-        messages.push(newMsgObject);
-        commitMessagesToLocalStorage();
-        clearReplyContextAnchor();
-        renderMessagesTrackEngine();
+        // Send message to backend API
+        fetch(`${API_BASE_URL}/messages/send`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newMsgObject)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                messages.push(data.message);
+                clearReplyContextAnchor();
+                renderMessagesTrackEngine();
+            } else {
+                alert('Failed to send message. Please try again.');
+            }
+        })
+        .catch(err => {
+            console.error('Error sending message:', err);
+            alert('Failed to send message. Make sure backend server is running on http://localhost:5000');
+        });
     }
 
     sendBtn.addEventListener('click', () => {
@@ -1024,28 +1028,22 @@
     });
 
     function evaluateIncomingMessageSeenStatus() {
-        let executionMutationOccurred = false;
-        const currentTimeStamp = Date.now();
         messages.forEach(m => {
             if (m.sender === otherUser.id && (!m.seenBy || !m.seenBy.includes(currentUser.name))) {
-                if (!m.seenBy) m.seenBy = [];
-                m.seenBy.push(currentUser.name);
-                m.status = 'seen';
-                if (!m.seenTimestamp) {
-                    m.seenTimestamp = currentTimeStamp;
-                }
-                if (!m.deliveredTimestamp) {
-                    m.deliveredTimestamp = currentTimeStamp; // fallback if it transitioned instantly
-                }
-                executionMutationOccurred = true;
+                // Mark message as seen on backend
+                fetch(`${API_BASE_URL}/messages/mark-seen`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        messageId: m.id,
+                        userName: currentUser.name
+                    })
+                })
+                .catch(err => console.error('Error marking message as seen:', err));
             }
         });
-        if (executionMutationOccurred) commitMessagesToLocalStorage();
     }
 
-    /* ========================================================================
-       KEYBOARD STORAGE ATTACHMENT AND SELECTION LAYER HOOKS
-       ======================================================================== */
     function triggerMediaAttachment() { mediaInput.click(); }
     function handleMediaSelection(e) {
         const selectedFile = e.target.files[0]; if (!selectedFile) return;
@@ -1066,6 +1064,23 @@
             e.target.value = '';
         };
         captureInput.click();
+    }
+
+    // Add functions to mark user online/offline
+    function markUserOnline(userId) {
+        fetch(`${API_BASE_URL}/user/online`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: userId })
+        }).catch(err => console.error('Error marking user online:', err));
+    }
+
+    function markUserOffline(userId) {
+        fetch(`${API_BASE_URL}/user/offline`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: userId })
+        }).catch(err => console.error('Error marking user offline:', err));
     }
 
     window.saveAssetToLocalGalleryEmulator = function(elementPointerId, fileFilename) {
@@ -1291,16 +1306,51 @@
 
     document.getElementById('deleteForMeBtn').addEventListener('click', () => {
         const target = messages.find(m => m.id === targetedActionMsgId);
-        if (target) { if(!target.hiddenForUsers) target.hiddenForUsers = []; target.hiddenForUsers.push(currentUser.id); commitMessagesToLocalStorage(); renderMessagesTrackEngine(); }
+        if (target) { 
+            fetch(`${API_BASE_URL}/messages/delete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messageId: targetedActionMsgId,
+                    userId: currentUser.id,
+                    type: 'me'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    loadChatMessagesFromServer();
+                }
+            })
+            .catch(err => console.error('Error deleting message:', err));
+        }
         closeModal('deleteChoiceOverlay');
     });
 
     document.getElementById('deleteForEveryoneBtn').addEventListener('click', () => {
         const target = messages.find(m => m.id === targetedActionMsgId);
         if (target) {
-            if (target.sender !== currentUser.id) { alert('You can only delete your own sent records for everyone!'); closeModal('deleteChoiceOverlay'); return; }
-            target.text = "🚫 This message was deleted for everyone"; target.msgType = "text"; target.mediaUrl = null;
-            commitMessagesToLocalStorage(); renderMessagesTrackEngine();
+            if (target.sender !== currentUser.id) { 
+                alert('You can only delete your own sent records for everyone!'); 
+                closeModal('deleteChoiceOverlay'); 
+                return; 
+            }
+            fetch(`${API_BASE_URL}/messages/delete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messageId: targetedActionMsgId,
+                    userId: currentUser.id,
+                    type: 'everyone'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    loadChatMessagesFromServer();
+                }
+            })
+            .catch(err => console.error('Error deleting message:', err));
         }
         closeModal('deleteChoiceOverlay');
     });
@@ -1400,8 +1450,18 @@
     };
 
     function closeContextMenu() { const liveMenu = document.querySelector('.message-menu.active'); if(liveMenu) { liveMenu.remove(); document.removeEventListener('click', closeContextMenu); } }
-    function commitMessagesToLocalStorage() { localStorage.setItem('chatMessages_suite', JSON.stringify(messages)); }
-    function loadChatMessagesStore() { const stored = localStorage.getItem('chatMessages_suite'); messages = stored ? JSON.parse(stored) : []; }
+    function loadChatMessagesFromServer() { 
+        if (!currentUser) return;
+        fetch(`${API_BASE_URL}/messages/get?userId=${currentUser.id}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    messages = data.messages;
+                    renderMessagesTrackEngine();
+                }
+            })
+            .catch(err => console.error('Error loading messages:', err));
+    }
     function escapeHtmlContentStructure(text) { return text.replace(/[&<>"']/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[match])); }
     messageInput.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 80) + 'px'; });
 </script>
