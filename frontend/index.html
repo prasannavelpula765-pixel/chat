@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Chat Suite - Premium Minimalist Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f0f0f0;
+            user-select: none;
+        }
+
+        /* LOGIN PAGE */
+        .login-page {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #075e54 0%, #128c7e 100%);
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-container h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #075e54;
+        }
+
+        .login-container p {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: #075e54;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* CHAT PAGE */
+        .chat-page {
+            display: none;
+            height: 100vh;
+            background: #fff;
+        }
+
+        .chat-page.active {
+            display: flex;
+        }
+
+        .chat-container {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+        }
+
+        .chat-main {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            position: relative;
+        }
+
+        /* Header Layout */
+        .chat-header {
+            background: #075e54;
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 42px;
+            height: 42px;
+            background: #25d366;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 20px;
+        }
+
+        .header-text h2 { font-size: 16px; margin: 0; }
+        .header-text p { font-size: 12px; opacity: 0.9; margin: 0; }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .header-action-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .header-action-btn:hover { transform: scale(1.15); }
+
+        .logout-btn {
+            background: #25d366;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* STORIES / STATUS BAR SECTION */
+        .status-stories-bar {
+            background: #ffffff;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 10px 15px;
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            align-items: center;
+            min-height: 85px;
+        }
+
+        .status-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            min-width: 65px;
+        }
+
+        .status-ring-container {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2.5px solid #25d366;
+            padding: 2px;
+        }
+
+        .status-ring-container.empty {
+            border-color: #ccc;
+        }
+
+        .status-avatar {
+            width: 100%;
+            height: 100%;
+            background: #e1f5fe;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .status-label {
+            font-size: 11px;
+            margin-top: 4px;
+            color: #333;
+            text-align: center;
+            max-width: 70px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .add-status-badge {
+            position: absolute;
+            bottom: 18px;
+            right: 5px;
+            background: #075e54;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            border: 1.5px solid white;
+        }
+
+        /* HOW TO USE STORIES BANNER */
+        .how-to-use-stories {
+            background: #e1f5fe;
+            color: #0277bd;
+            padding: 8px 15px;
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-bottom: 1px solid #b3e5fc;
+        }
+
+        /* Messages Track Layer Container */
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background-color: #efeae2;
+        }
+
+        /* Message Layout Mechanics */
+        .message {
+            position: relative;
+            display: flex;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        .swipe-reply-bg-indicator {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%) scale(0.6);
+            font-size: 20px;
+            color: #075e54;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .message.sent { justify-content: flex-end; }
+        .message.received { justify-content: flex-start; }
+
+        .message-wrapper {
+            position: relative;
+            display: flex;
+            max-width: 65%;
+            align-items: center;
+            gap: 6px;
+            z-index: 2;
+            transition: transform 0.05s linear;
+        }
+
+        .message.sent .message-wrapper { flex-direction: row; }
+        .message.received .message-wrapper { flex-direction: row-reverse; }
+
+        .message-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 12px;
+            box-shadow: 0 1px 1.5px rgba(0, 0, 0, 0.15);
+            width: 100%;
+        }
+
+        .message.sent .message-content-wrapper { background: #dcf8c6; border-top-right-radius: 2px; }
+        .message.received .message-content-wrapper { background: #ffffff; border-top-left-radius: 2px; }
+
+        .nested-reply-preview {
+            background: rgba(0,0,0,0.06);
+            border-left: 3px solid #075e54;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        .message-content {
+            font-size: 14.5px;
+            color: #303030;
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+
+        .media-container {
+            position: relative;
+            margin-top: 4px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .shared-img, .shared-video { max-width: 100%; max-height: 250px; border-radius: 8px; display: block; }
+
+        .gallery-save-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.65);
+            color: white;
+            border: none;
+            padding: 5px 9px;
+            font-size: 11px;
+            border-radius: 4px;
+            cursor: pointer;
+            backdrop-filter: blur(2px);
+            font-weight: bold;
+        }
+
+        /* Message Tracking Status Subtext Info styling */
+        .message-info {
+            font-size: 10px;
+            color: #656565;
+            margin-top: 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            align-self: flex-end;
+            text-align: right;
+            border-top: 1px dashed rgba(0,0,0,0.05);
+            padding-top: 4px;
+            width: 100%;
+        }
+
+        .timestamp-log {
+            display: flex;
+            justify-content: flex-end;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .delivery-status-text {
+            font-weight: 600;
+            font-size: 9.5px;
+            text-transform: capitalize;
+        }
+        
+        .delivery-status-text.pending { color: #8c8c8c; }
+        .delivery-status-text.delivered { color: #075e54; }
+        .delivery-status-text.seen { color: #2b7de9; font-weight: bold; }
+
+        .message-options-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            opacity: 0;
+            font-size: 16px;
+            padding: 4px;
+            color: #777;
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .message:hover .message-options-btn { opacity: 1; }
+
+        /* Reply Window Toolbar Deck */
+        .reply-context-toolbar {
+            display: none;
+            background: #e6edd8;
+            border-left: 5px solid #075e54;
+            padding: 8px 15px;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .reply-context-toolbar.active { display: flex; }
+        .reply-context-body { font-size: 13px; color: #333; }
+        .reply-context-close-btn { background: none; border: none; font-size: 16px; cursor: pointer; }
+
+        /* Input Toolbar Deck Area Layout */
+        .input-area {
+            padding: 10px 12px;
+            background: #f0f0f0;
+            border-top: 1px solid #ddd;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .input-action-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .input-action-btn:hover { background: rgba(0,0,0,0.05); }
+
+        .input-field {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 14px;
+            resize: none;
+            max-height: 80px;
+            background: white;
+        }
+
+        .send-btn {
+            background: #075e54;
+            color: white;
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* OVERLAYS & MODALS GENERAL DESIGN SHEET */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 20000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-card {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 380px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        .modal-card h3 { margin-bottom: 15px; color: #075e54; }
+        
+        .modal-btn {
+            width: 100%; padding: 11px; margin-top: 10px; border-radius: 6px;
+            font-weight: bold; cursor: pointer; border: none; font-size: 14px;
+        }
+        .modal-btn.primary { background: #075e54; color: white; }
+        .modal-btn.danger { background: #d32f2f; color: white; }
+        .modal-btn.secondary { background: #f0f0f0; color: #333; }
+
+        /* STORIES HUB SLIDE SHOW SYSTEM SHOWCASE GRAPHICS FULLSCREEN OVERLAY */
+        .story-viewer-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 30000;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+        }
+        .story-top-deck {
+            width: 100%;
+            padding-top: 15px;
+            position: relative;
+        }
+        .story-progress-container {
+            width: 90%; height: 4px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 0 auto 15px auto;
+        }
+        .story-progress-bar {
+            width: 0%; height: 100%;
+            background: white;
+            transition: width 4.9s linear;
+        }
+        .story-header-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            padding: 0 20px;
+        }
+        .story-header-avatar {
+            width: 36px; height: 36px; background: #555; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 18px;
+        }
+        .story-close-trigger {
+            position: absolute; top: 20px; right: 20px; font-size: 26px; color: white; cursor: pointer; z-index: 30010;
+        }
+        .story-media-frame { max-width: 100%; max-height: 65vh; object-fit: contain; }
+
+        /* NEW IN-STORY INTERACTIVE REPLY ACTION TRAY */
+        .story-reply-tray {
+            width: 90%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 10px 15px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 30050;
+        }
+        .story-reply-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            padding: 5px;
+        }
+        .story-reply-input::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+        .story-reply-btn {
+            background: #25d366;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* LIVE CALL OVERLAY SIGNAL TRACK ENGINE SYSTEM */
+        .call-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 30, 26, 0.98);
+            z-index: 10000;
+            color: white;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        .call-avatar-big {
+            width: 110px; height: 110px; background: #128c7e; border-radius: 50%;
+            font-size: 55px; display: flex; align-items: center; justify-content: center;
+            margin: 10px auto; box-shadow: 0 0 20px rgba(37, 211, 102, 0.4);
+        }
+        .video-streams-container { display: flex; justify-content: center; align-items: center; gap: 20px; width: 100%; max-width: 800px; margin: 15px auto; flex-wrap: wrap; }
+        .video-wrapper { position: relative; background: #1c1a1a; border-radius: 12px; overflow: hidden; width: 320px; height: 240px; }
+        video.live-stream { width: 100%; height: 100%; object-fit: cover; }
+        .call-actions-bar { display: flex; gap: 30px; margin-top: 10px; }
+        .accept-call-btn { background: #25d366; color: white; border: none; width: 60px; height: 60px; border-radius: 50%; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .end-call-btn { background: #ff3b30; color: white; border: none; width: 60px; height: 60px; border-radius: 50%; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        /* HIDDEN ELEMENT HOOK FIELDS CHANNEL MATRIX */
+        #mediaInput, #statusInput, #captureInput { display: none; }
+
+        /* CONTEXT OPERATIONAL DROPDOWNS */
+        .message-menu { display: none; position: fixed; background: white; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 999; min-width: 195px; }
+        .message-menu.active { display: block; }
+        .message-menu-item { padding: 11px 15px; cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-size: 14px; }
+        .message-menu-item:hover { background: #f5f5f5; }
+    </style>
+</head>
+<body>
+
+<div class="login-page" id="loginPage">
+    <div class="login-container">
+        <h1>💬 Pro Suite Chat</h1>
+        <p>Enter user authentication credentials</p>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="userId">User ID </label>
+                <input type="text" id="userId" placeholder="" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="" required>
+            </div>
+            <button type="submit" class="login-btn">Secure Login</button>
+        </form>
+    </div>
+</div>
+
+<div class="chat-page" id="chatPage">
+    <div class="chat-container">
+        <div class="chat-main">
+            
+            <div class="chat-header">
+                <div class="header-info">
+                    <div class="user-avatar" id="contactAvatar">U</div>
+                    <div class="header-text">
+                        <h2 id="contactName">Target User</h2>
+                        <p id="contactStatus">Offline</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="header-action-btn" onclick="initiateWebRTCCall('voice')" title="Start Voice Call">📞</button>
+                    <button class="header-action-btn" onclick="initiateWebRTCCall('video')" title="Start Video Call">📹</button>
+                    <button class="logout-btn" id="logoutBtn">Logout</button>
+                </div>
+            </div>
+
+            <div class="status-stories-bar">
+                <div class="status-node" onclick="handleMyStatusClickAction()">
+                    <div class="status-ring-container" id="myStatusRing">
+                        <div class="status-avatar" id="myStatusAvatar">🦊</div>
+                    </div>
+                    <div class="add-status-badge">+</div>
+                    <div class="status-label">My Status</div>
+                </div>
+                <div class="status-node" id="partnerStatusNode" onclick="launchPartnerStoryViewer()" style="display: none;">
+                    <div class="status-ring-container">
+                        <div class="status-avatar" id="partnerStatusAvatar">🐼</div>
+                    </div>
+                    <div class="status-label" id="partnerStatusLabel">Partner</div>
+                </div>
+            </div>
+
+            <div class="messages-container" id="messagesContainer"></div>
+
+            <div class="reply-context-toolbar" id="replyContextToolbar">
+                <div class="reply-context-body" id="replyContextBody">Replying context track...</div>
+                <button class="reply-context-close-btn" onclick="clearReplyContextAnchor()">✕</button>
+            </div>
+
+            <div class="input-area">
+                <button class="input-action-btn" onclick="triggerMediaAttachment()" title="Attach Storage Asset">📎</button>
+                <button class="input-action-btn" onclick="openInlineHardwareCapture('image')" title="Capture Image Attachment">📸</button>
+                <button class="input-action-btn" onclick="openInlineHardwareCapture('video')" title="Record Video Attachment">🎥</button>
+
+                <textarea class="input-field" id="messageInput" placeholder="Type a message..." rows="1"></textarea>
+                <button class="send-btn" id="sendBtn">➤</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<input type="file" id="mediaInput" accept="image/*,video/*" onchange="handleMediaSelection(event)">
+<input type="file" id="statusInput" accept="image/*,video/*" capture="user" onchange="handleStatusSelection(event)">
+<input type="file" id="captureInput" accept="image/*,video/*" capture="user">
+
+<div class="call-overlay" id="callOverlay">
+    <div style="text-align: center; width: 100%;">
+        <div class="call-avatar-big" id="callAvatar">👩</div>
+        <h2 id="callTargetName">Contact Profile</h2>
+        <div style="font-size: 16px; color: #25d366; font-weight: 500; margin-top: 10px;" id="callStatusText">Calling Line Channel...</div>
+        <div style="font-size: 24px; font-weight: 300; margin-top: 5px;" id="callTimerDisplay">00:00</div>
+    </div>
+    <div class="video-streams-container" id="videoStreamsContainer" style="display: none;">
+        <div class="video-wrapper" id="localVideoWrapper">
+            <video class="live-stream" id="localVideo" autoplay muted playsinline></video>
+        </div>
+        <div class="video-wrapper">
+            <video class="live-stream" id="remoteVideo" autoplay playsinline></video>
+        </div>
+    </div>
+    <div class="call-actions-bar">
+        <button class="accept-call-btn" id="acceptCallBtn" onclick="acceptIncomingCall()" style="display: none;">📞</button>
+        <button class="end-call-btn" onclick="hangUpCall()">❌</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="deleteChoiceOverlay">
+    <div class="modal-card">
+        <h3>🗑️ Delete Message Options</h3>
+        <p style="font-size: 13.5px; color:#555; margin-bottom:15px;">Choose the scope under which this message content should be destroyed:</p>
+        <button class="modal-btn danger" id="deleteForEveryoneBtn">Delete for Everyone</button>
+        <button class="modal-btn primary" id="deleteForMeBtn">Delete for Me Only</button>
+        <button class="modal-btn secondary" onclick="closeModal('deleteChoiceOverlay')">Cancel Selection</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="deviceSpecsOverlay">
+    <div class="modal-card">
+        <h3>ℹ️ Message Context Analytics</h3>
+        <div style="font-size:13px; color:#444; line-height:1.6; margin-bottom:15px;" id="deviceSpecsContent">
+            Generating diagnostics telemetry metrics data link log...
+        </div>
+        <button class="modal-btn primary" onclick="closeModal('deviceSpecsOverlay')">Acknowledge Logs</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="myStatusOptionsOverlay">
+    <div class="modal-card">
+        <h3>✨ Manage My Story Status</h3>
+        <p style="font-size: 13.5px; color:#555; margin-bottom:15px;">Choose an operational path to handle your current live status update story frame:</p>
+        <button class="modal-btn primary" onclick="launchMyOwnStoryViewer()">👁️ View Active Story</button>
+        <button class="modal-btn danger" onclick="purgeMyActiveStatusStory()">🗑️ Delete My Status Story</button>
+        <button class="modal-btn secondary" onclick="closeModal('myStatusOptionsOverlay')">Close Menu</button>
+    </div>
+</div>
+
+<div class="story-viewer-overlay" id="storyViewerOverlay">
+    <div class="story-top-deck">
+        <div class="story-progress-container"><div class="story-progress-bar" id="storyProgressBar"></div></div>
+        <div class="story-header-meta">
+            <div class="story-header-avatar" id="storyHeaderAvatar">🦊</div>
+            <div style="font-weight:bold; font-size:14px;" id="storyHeaderProfileName">User Profile</div>
+        </div>
+        <span class="story-close-trigger" onclick="terminateStoryPlaybackOverlay()">✕</span>
+    </div>
+
+    <div id="storyMediaContainerBox" style="width:100%; display:flex; justify-content:center; align-items:center; flex:1;"></div>
+
+    <div class="story-reply-tray">
+        <input type="text" id="storyReplyInput" class="story-reply-input" placeholder="Type a response to this story status..." onfocus="pauseStoryPlayback()" onblur="resumeStoryPlayback()">
+        <button class="story-reply-btn" onclick="submitInStoryTextReplyPayload()">Send Reply</button>
+    </div>
+</div>
+
+<script>
+    const users = {
+        user1: { id: '8106413016', password: 'surya', name: 'BABU 🫠', avatar: '😘' },
+        user2: { id: '8074404598', password: 'arun', name: 'BEDU 🫠', avatar: '🥹' }
+    };
+
+    let currentUser = null; let otherUser = null;
+    let messages = []; let currentReplyTargetId = null; let targetedActionMsgId = null;
+    let storyPlaybackTimeout = null; let storyTimeStarted = 0; let storyTimeRemaining = 4900; let currentStoryObject = null;
+
+    let localStream = null; let peerConnection = null;
+    let callingTimerInterval = null; let callingTimerSeconds = 0; let activeCallType = null;
+    const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+    const loginPage = document.getElementById('loginPage');
+    const chatPage = document.getElementById('chatPage');
+    const loginForm = document.getElementById('loginForm');
+    const userIdInput = document.getElementById('userId');
+    const passwordInput = document.getElementById('password');
+    const messagesContainer = document.getElementById('messagesContainer');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const contactName = document.getElementById('contactName');
+    const contactAvatar = document.getElementById('contactAvatar');
+    const contactStatus = document.getElementById('contactStatus');
+    
+    const replyContextToolbar = document.getElementById('replyContextToolbar');
+    const replyContextBody = document.getElementById('replyContextBody');
+    const mediaInput = document.getElementById('mediaInput');
+    const statusInput = document.getElementById('statusInput');
+    const captureInput = document.getElementById('captureInput');
+
+    const callOverlay = document.getElementById('callOverlay');
+    const callStatusText = document.getElementById('callStatusText');
+    const callTimerDisplay = document.getElementById('callTimerDisplay');
+    const acceptCallBtn = document.getElementById('acceptCallBtn');
+    const videoStreamsContainer = document.getElementById('videoStreamsContainer');
+    const localVideo = document.getElementById('localVideo');
+    const remoteVideo = document.getElementById('remoteVideo');
+    const localVideoWrapper = document.getElementById('localVideoWrapper');
+
+    function applicationInitializeLifecycle() {
+        loadChatMessagesStore();
+        refreshStatusStoriesWidgets();
+        evaluateIncomingMessageSeenStatus();
+        renderMessagesTrackEngine();
+        listenForWebRTCSignals();
+        
+        setInterval(backgroundPollingSyncPulse, 1000);
+    }
+
+    /* ========================================================================
+       AUTHENTICATION LAYERS MANAGEMENT
+       ======================================================================== */
+    loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const enteredId = userIdInput.value.trim();
+        const enteredPw = passwordInput.value.trim();
+
+        let matchedKey = null;
+        for (let key in users) {
+            if (users[key].id === enteredId && users[key].password === enteredPw) { currentUser = users[key]; matchedKey = key; break; }
+        }
+
+        if (currentUser) {
+            const oppositeKey = Object.keys(users).find(k => k !== matchedKey);
+            otherUser = users[oppositeKey];
+
+            loginPage.style.display = 'none';
+            chatPage.classList.add('active');
+            contactName.textContent = otherUser.name;
+            contactAvatar.textContent = otherUser.avatar;
+            document.getElementById('myStatusAvatar').textContent = currentUser.avatar;
+
+            localStorage.setItem(`active_${currentUser.id}`, 'true');
+            userIdInput.value = ''; passwordInput.value = '';
+            applicationInitializeLifecycle();
+            messageInput.focus();
+        } else {
+            alert('Invalid credentials entered!');
+        }
+    });
+
+    logoutBtn.addEventListener('click', function() {
+        if (confirm('Log out from active system channel?')) {
+            localStorage.setItem(`lastSeen_${currentUser.id}`, Date.now().toString());
+            localStorage.removeItem(`active_${currentUser.id}`);
+            currentUser = null; otherUser = null; messages = [];
+            loginPage.style.display = 'flex';
+            chatPage.classList.remove('active');
+        }
+    });
+
+    function backgroundPollingSyncPulse() {
+        if (!currentUser || !otherUser) return;
+        
+        const isTargetOnline = localStorage.getItem(`active_${otherUser.id}`) === 'true';
+        if (isTargetOnline) {
+            contactStatus.innerHTML = `<span style="width:8px; height:8px; background:#25d366; display:inline-block; border-radius:50%;"></span> Online`;
+        } else {
+            const ts = localStorage.getItem(`lastSeen_${otherUser.id}`);
+            contactStatus.textContent = ts ? `Last seen at ${new Date(parseInt(ts)).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}` : 'Offline';
+        }
+
+        const rawStore = localStorage.getItem('chatMessages_suite');
+        if (rawStore) {
+            const comparativeObj = JSON.parse(rawStore);
+            if (JSON.stringify(comparativeObj) !== JSON.stringify(messages)) {
+                messages = comparativeObj;
+                evaluateIncomingMessageSeenStatus();
+                renderMessagesTrackEngine();
+            }
+        }
+
+        if (isTargetOnline) {
+            let updated = false;
+            messages.forEach(m => {
+                if (m.sender === currentUser.id && m.status === 'pending') {
+                    m.status = 'delivered';
+                    if (!m.deliveredTimestamp) m.deliveredTimestamp = Date.now();
+                    updated = true;
+                }
+            });
+            if (updated) commitMessagesToLocalStorage();
+        }
+
+        refreshStatusStoriesWidgets();
+    }
+
+    /* ========================================================================
+       LIVE CALL SIGNAL POLLING NETWORK ENGINES (WEBRTC EMULATION HOOKS)
+       ======================================================================== */
+    function listenForWebRTCSignals() {
+        window.addEventListener('storage', async (e) => {
+            if (!currentUser || !otherUser) return;
+
+            if (e.key === `webrtc_offer_${currentUser.id}` && e.newValue) {
+                const signalData = JSON.parse(e.newValue);
+                activeCallType = signalData.type;
+                showCallOverlayUI(`Incoming ${activeCallType === 'video' ? 'Video' : 'Voice'} Call...`);
+                acceptCallBtn.style.display = 'block';
+            }
+            if (e.key === `webrtc_answer_${currentUser.id}` && e.newValue && peerConnection) {
+                const answerObj = JSON.parse(e.newValue);
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(answerObj));
+                startCallTimer();
+            }
+            if (e.key === `webrtc_ice_${currentUser.id}` && e.newValue && peerConnection) {
+                try { await peerConnection.addIceCandidate(new RTCIceCandidate(JSON.parse(e.newValue))); } catch(err){}
+            }
+            if (e.key === `webrtc_hangup_${currentUser.id}` && e.newValue === 'true') { cleanUpCallTracks(); }
+
+            if (e.key === 'chatMessages_suite') {
+                const newStore = e.newValue ? JSON.parse(e.newValue) : [];
+                if (JSON.stringify(newStore) !== JSON.stringify(messages)) {
+                    messages = newStore;
+                    evaluateIncomingMessageSeenStatus();
+                    renderMessagesTrackEngine();
+                }
+            }
+        });
+    }
+
+    async function initiateWebRTCCall(type) {
+        activeCallType = type;
+        showCallOverlayUI('Ringing...');
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: type === 'video' });
+            if (type === 'video') { videoStreamsContainer.style.display = 'flex'; localVideo.srcObject = localStream; }
+            setupPeerConnection();
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+            localStorage.setItem(`webrtc_offer_${otherUser.id}`, JSON.stringify({ type: type, sdp: offer.sdp }));
+        } catch (err) { alert('Hardware communication link allocation denied.'); hangUpCall(); }
+    }
+
+    async function acceptIncomingCall() {
+        acceptCallBtn.style.display = 'none';
+        callStatusText.textContent = 'Connecting...';
+        const rawOffer = localStorage.getItem(`webrtc_offer_${currentUser.id}`); if (!rawOffer) return;
+        const offerObj = JSON.parse(rawOffer);
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: activeCallType === 'video' });
+            if (activeCallType === 'video') { videoStreamsContainer.style.display = 'flex'; localVideo.srcObject = localStream; }
+            setupPeerConnection();
+            await peerConnection.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: offerObj.sdp }));
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            localStorage.setItem(`webrtc_answer_${otherUser.id}`, JSON.stringify({ type: 'answer', sdp: answer.sdp }));
+            startCallTimer();
+        } catch (err) { alert('Hardware interface line connection failed.'); hangUpCall(); }
+    }
+
+    function setupPeerConnection() {
+        peerConnection = new RTCPeerConnection(rtcConfig);
+        if (localStream) { localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream)); }
+        peerConnection.ontrack = (event) => {
+            if (activeCallType === 'video') { videoStreamsContainer.style.display = 'flex'; remoteVideo.srcObject = event.streams[0]; }
+        };
+        peerConnection.onicecandidate = (event) => { if (event.candidate) { localStorage.setItem(`webrtc_ice_${otherUser.id}`, JSON.stringify(event.candidate)); } };
+    }
+
+    function showCallOverlayUI(statusMsg) {
+        document.getElementById('callTargetName').textContent = otherUser.name;
+        document.getElementById('callAvatar').textContent = otherUser.avatar;
+        callStatusText.textContent = statusMsg; callTimerDisplay.textContent = '00:00';
+        callOverlay.style.display = 'flex';
+    }
+
+    function startCallTimer() {
+        callStatusText.textContent = activeCallType === 'video' ? 'Connected (Video Call)' : 'Connected (Voice Call)';
+        callingTimerSeconds = 0; if (callingTimerInterval) clearInterval(callingTimerInterval);
+        callingTimerInterval = setInterval(() => {
+            callingTimerSeconds++;
+            const min = String(Math.floor(callingTimerSeconds / 60)).padStart(2, '0');
+            const sec = String(callingTimerSeconds % 60).padStart(2, '0');
+            callTimerDisplay.textContent = `${min}:${sec}`;
+        }, 1000);
+    }
+
+    function hangUpCall() { if (otherUser) { localStorage.setItem(`webrtc_hangup_${otherUser.id}`, 'true'); } cleanUpCallTracks(); }
+    function cleanUpCallTracks() {
+        if (callingTimerInterval) clearInterval(callingTimerInterval);
+        if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+        if (peerConnection) { peerConnection.close(); peerConnection = null; }
+        if (currentUser) {
+            localStorage.removeItem(`webrtc_offer_${currentUser.id}`); localStorage.removeItem(`webrtc_answer_${currentUser.id}`);
+            localStorage.removeItem(`webrtc_ice_${currentUser.id}`); localStorage.removeItem(`webrtc_hangup_${currentUser.id}`);
+        }
+        localVideo.srcObject = null; remoteVideo.srcObject = null; videoStreamsContainer.style.display = 'none';
+        callOverlay.style.display = 'none'; acceptCallBtn.style.display = 'none';
+    }
+
+    /* ========================================================================
+       TEXT CONVERSATIONAL HANDLING ENGINES
+       ======================================================================== */
+    function dispatchMessagePayload(textData, payloadType, resourceUrl, optionalReplyId = null) {
+        const targetOnline = localStorage.getItem(`active_${otherUser.id}`) === 'true';
+        const currentTimeStamp = Date.now();
+        const activeReplyAnchor = optionalReplyId || currentReplyTargetId;
+
+        const newMsgObject = {
+            id: currentTimeStamp, 
+            sender: currentUser.id, 
+            text: textData, 
+            msgType: payloadType, 
+            mediaUrl: resourceUrl,
+            timestamp: currentTimeStamp, // Message Send Time
+            sendTimestamp: currentTimeStamp,
+            deliveredTimestamp: targetOnline ? currentTimeStamp : null, // Message Delivery Time
+            seenTimestamp: null, // Message Seen Time
+            status: targetOnline ? 'delivered' : 'pending',
+            seenBy: [], 
+            replyToId: activeReplyAnchor, 
+            hiddenForUsers: []
+        };
+
+        messages.push(newMsgObject);
+        commitMessagesToLocalStorage();
+        clearReplyContextAnchor();
+        renderMessagesTrackEngine();
+    }
+
+    sendBtn.addEventListener('click', () => {
+        const inputStr = messageInput.value.trim(); if(!inputStr) return;
+        dispatchMessagePayload(inputStr, 'text', null);
+        messageInput.value = ''; messageInput.style.height = 'auto';
+    });
+
+    function evaluateIncomingMessageSeenStatus() {
+        let executionMutationOccurred = false;
+        const currentTimeStamp = Date.now();
+        messages.forEach(m => {
+            if (m.sender === otherUser.id && (!m.seenBy || !m.seenBy.includes(currentUser.name))) {
+                if (!m.seenBy) m.seenBy = [];
+                m.seenBy.push(currentUser.name);
+                m.status = 'seen';
+                if (!m.seenTimestamp) {
+                    m.seenTimestamp = currentTimeStamp;
+                }
+                if (!m.deliveredTimestamp) {
+                    m.deliveredTimestamp = currentTimeStamp; // fallback if it transitioned instantly
+                }
+                executionMutationOccurred = true;
+            }
+        });
+        if (executionMutationOccurred) commitMessagesToLocalStorage();
+    }
+
+    /* ========================================================================
+       KEYBOARD STORAGE ATTACHMENT AND SELECTION LAYER HOOKS
+       ======================================================================== */
+    function triggerMediaAttachment() { mediaInput.click(); }
+    function handleMediaSelection(e) {
+        const selectedFile = e.target.files[0]; if (!selectedFile) return;
+        const fileReader = new FileReader();
+        const computedType = selectedFile.type.startsWith('image/') ? 'image' : 'video';
+        fileReader.onload = function(evt) { dispatchMessagePayload(selectedFile.name, computedType, evt.target.result); };
+        fileReader.readAsDataURL(selectedFile);
+        e.target.value = '';
+    }
+
+    function openInlineHardwareCapture(restrictiveType) {
+        captureInput.accept = restrictiveType === 'image' ? 'image/*' : 'video/*';
+        captureInput.onchange = function(e) {
+            const capturedFile = e.target.files[0]; if (!capturedFile) return;
+            const readerInstance = new FileReader();
+            readerInstance.onload = function(evt) { dispatchMessagePayload("Direct Camera Capture Attachment", restrictiveType, evt.target.result); };
+            readerInstance.readAsDataURL(capturedFile);
+            e.target.value = '';
+        };
+        captureInput.click();
+    }
+
+    window.saveAssetToLocalGalleryEmulator = function(elementPointerId, fileFilename) {
+        const targetedSourceUrl = document.getElementById(elementPointerId).src;
+        const simulatedDownloadAnchor = document.createElement('a');
+        simulatedDownloadAnchor.href = targetedSourceUrl; simulatedDownloadAnchor.download = fileFilename || 'chat_gallery_download';
+        document.body.appendChild(simulatedDownloadAnchor); simulatedDownloadAnchor.click(); document.body.removeChild(simulatedDownloadAnchor);
+        alert('Asset successfully saved into storage gallery.');
+    };
+
+    /* ========================================================================
+       PREMIUM INSTAGRAM STYLE STORIES HUB SYSTEM WITH IN-STORY REPLIES
+       ======================================================================== */
+    function handleMyStatusClickAction() {
+        const hasActiveStory = localStorage.getItem(`story_active_${currentUser.id}`) !== null;
+        if (hasActiveStory) {
+            document.getElementById('myStatusOptionsOverlay').style.display = 'flex';
+        } else {
+            statusInput.click();
+        }
+    }
+
+    function handleStatusSelection(e) {
+        const fileBlob = e.target.files[0]; if (!fileBlob) return;
+        const reader = new FileReader();
+        const computedStoryType = fileBlob.type.startsWith('video/') ? 'video' : 'image';
+        
+        reader.onload = function(evt) {
+            const newStoryFrame = {
+                id: Date.now(),
+                publisherId: currentUser.id, publisherName: currentUser.name, publisherAvatar: currentUser.avatar,
+                dataUrl: evt.target.result, contentType: computedStoryType, timestamp: Date.now()
+            };
+            localStorage.setItem(`story_active_${currentUser.id}`, JSON.stringify(newStoryFrame));
+            alert('Your new story status frame has been published successfully!');
+            refreshStatusStoriesWidgets();
+        };
+        reader.readAsDataURL(fileBlob);
+    }
+
+    function purgeMyActiveStatusStory() {
+        localStorage.removeItem(`story_active_${currentUser.id}`);
+        alert('Your status story update has been completely removed.');
+        closeModal('myStatusOptionsOverlay');
+        refreshStatusStoriesWidgets();
+    }
+
+    function refreshStatusStoriesWidgets() {
+        if (!currentUser) return;
+        const myActiveStoryData = localStorage.getItem(`story_active_${currentUser.id}`);
+        const myRing = document.getElementById('myStatusRing');
+        if (myActiveStoryData) { myRing.classList.remove('empty'); } else { myRing.classList.add('empty'); }
+
+        const partnerActiveStoryData = localStorage.getItem(`story_active_${otherUser.id}`);
+        const partnerNodeContainer = document.getElementById('partnerStatusNode');
+        if (partnerActiveStoryData) {
+            const parsedPartnerStory = JSON.parse(partnerActiveStoryData);
+            if (Date.now() - parsedPartnerStory.timestamp > 300000) {
+                localStorage.removeItem(`story_active_${otherUser.id}`); partnerNodeContainer.style.display = 'none'; return;
+            }
+            document.getElementById('partnerStatusAvatar').textContent = parsedPartnerStory.publisherAvatar;
+            document.getElementById('partnerStatusLabel').textContent = parsedPartnerStory.publisherName;
+            partnerNodeContainer.style.display = 'flex';
+        } else { partnerNodeContainer.style.display = 'none'; }
+    }
+
+    function launchMyOwnStoryViewer() {
+        closeModal('myStatusOptionsOverlay');
+        const dataPayloadStr = localStorage.getItem(`story_active_${currentUser.id}`); if(!dataPayloadStr) return;
+        executeStoryViewerOverlayPlayback(JSON.parse(dataPayloadStr));
+    }
+
+    function launchPartnerStoryViewer() {
+        const dataPayloadStr = localStorage.getItem(`story_active_${otherUser.id}`); if(!dataPayloadStr) return;
+        executeStoryViewerOverlayPlayback(JSON.parse(dataPayloadStr));
+    }
+
+    function executeStoryViewerOverlayPlayback(storyObject) {
+        currentStoryObject = storyObject;
+        document.getElementById('storyHeaderAvatar').textContent = storyObject.publisherAvatar;
+        document.getElementById('storyHeaderProfileName').textContent = storyObject.publisherName;
+        document.getElementById('storyReplyInput').value = '';
+        
+        const mediaContainerBox = document.getElementById('storyMediaContainerBox');
+        mediaContainerBox.innerHTML = ''; 
+
+        if (storyObject.contentType === 'video') {
+            mediaContainerBox.innerHTML = `<video src="${storyObject.dataUrl}" autoplay playsinline class="story-media-frame" id="activeStoryVideoFrame"></video>`;
+        } else {
+            mediaContainerBox.innerHTML = `<img src="${storyObject.dataUrl}" class="story-media-frame" alt="Active Story Content" />`;
+        }
+
+        const overlay = document.getElementById('storyViewerOverlay');
+        const progressMeter = document.getElementById('storyProgressBar');
+        
+        overlay.style.display = 'flex';
+        progressMeter.style.width = '0%';
+        
+        storyTimeStarted = Date.now();
+        storyTimeRemaining = 4900;
+
+        setTimeout(() => { 
+            progressMeter.style.transition = 'width 4.9s linear';
+            progressMeter.style.width = '100%'; 
+        }, 50);
+
+        storyPlaybackTimeout = setTimeout(() => { terminateStoryPlaybackOverlay(); }, storyTimeRemaining);
+    }
+
+    function pauseStoryPlayback() {
+        clearTimeout(storyPlaybackTimeout);
+        const elapsed = Date.now() - storyTimeStarted;
+        storyTimeRemaining -= elapsed;
+        
+        const progressMeter = document.getElementById('storyProgressBar');
+        const computedWidth = progressMeter.getBoundingClientRect().width;
+        const parentWidth = progressMeter.parentElement.getBoundingClientRect().width;
+        const currentPercentage = (computedWidth / parentWidth) * 100;
+        
+        progressMeter.style.transition = 'none';
+        progressMeter.style.width = `${currentPercentage}%`;
+        
+        const videoElement = document.getElementById('activeStoryVideoFrame');
+        if (videoElement) videoElement.pause();
+    }
+
+    function resumeStoryPlayback() {
+        storyTimeStarted = Date.now();
+        const progressMeter = document.getElementById('storyProgressBar');
+        
+        setTimeout(() => {
+            progressMeter.style.transition = `width ${storyTimeRemaining / 1000}s linear`;
+            progressMeter.style.width = '100%';
+        }, 50);
+
+        const videoElement = document.getElementById('activeStoryVideoFrame');
+        if (videoElement) videoElement.play();
+
+        storyPlaybackTimeout = setTimeout(() => { terminateStoryPlaybackOverlay(); }, storyTimeRemaining);
+    }
+
+    /* SUBMIT LIVE IN-STORY INPUT FIELD REPLY PAYLOAD */
+    function submitInStoryTextReplyPayload() {
+        const textResponse = document.getElementById('storyReplyInput').value.trim();
+        if (!textResponse || !currentStoryObject) return;
+
+        const contextTrackingMessageString = `💬 Story Reply: "${textResponse}"`;
+        dispatchMessagePayload(contextTrackingMessageString, 'text', null);
+        
+        alert('Reply to this story has been instantly sent to the chat room!');
+        terminateStoryPlaybackOverlay();
+    }
+
+    function terminateStoryPlaybackOverlay() {
+        clearTimeout(storyPlaybackTimeout);
+        document.getElementById('storyViewerOverlay').style.display = 'none';
+        document.getElementById('storyProgressBar').style.width = '0%';
+        document.getElementById('storyMediaContainerBox').innerHTML = '';
+        currentStoryObject = null;
+    }
+
+    /* ========================================================================
+       DRAG TO REPLY INTERACTIVE GESTURE RECEPTOR MECHANICS
+       ======================================================================== */
+    function bindDragToReplyGestures(element, messageId) {
+        const wrapper = element.querySelector('.message-wrapper');
+        const replyBgIndicator = element.querySelector('.swipe-reply-bg-indicator');
+        if (!wrapper || !replyBgIndicator) return;
+
+        let startX = 0, currentX = 0, isDragging = false;
+
+        function dragMovementInitiated(xCoord) { startX = xCoord; isDragging = true; }
+        function dragMovementProcessing(xCoord) {
+            if (!isDragging) return;
+            currentX = xCoord - startX; if (currentX < 0) currentX = 0; if (currentX > 85) currentX = 85;
+            wrapper.style.transform = `translateX(${currentX}px)`;
+            const dynamicOpacityRatio = currentX / 85; replyBgIndicator.style.opacity = dynamicOpacityRatio;
+            replyBgIndicator.style.transform = `translateY(-50%) scale(${0.6 + (dynamicOpacityRatio * 0.4)})`;
+        }
+        function dragMovementTerminated() {
+            if (!isDragging) return; isDragging = false;
+            wrapper.style.transform = 'translateX(0px)'; replyBgIndicator.style.opacity = 0;
+            if (currentX >= 60) { activateReplyContextAnchor(messageId); }
+            currentX = 0;
+        }
+
+        wrapper.addEventListener('mousedown', (e) => dragMovementInitiated(e.clientX));
+        window.addEventListener('mousemove', (e) => dragMovementProcessing(e.clientX));
+        window.addEventListener('mouseup', dragMovementTerminated);
+        wrapper.addEventListener('touchstart', (e) => dragMovementInitiated(e.touches[0].clientX), { passive: true });
+        wrapper.addEventListener('touchmove', (e) => dragMovementProcessing(e.touches[0].clientX), { passive: true });
+        wrapper.addEventListener('touchend', dragMovementTerminated);
+    }
+
+    function activateReplyContextAnchor(msgId) {
+        const target = messages.find(m => m.id === msgId); if (!target) return;
+        currentReplyTargetId = msgId; replyContextBody.textContent = `Replying to: "${target.text}"`;
+        replyContextToolbar.classList.add('active'); messageInput.focus();
+    }
+    function clearReplyContextAnchor() { currentReplyTargetId = null; replyContextToolbar.classList.remove('active'); }
+
+    /* ========================================================================
+       DESTRUCTION SCOPE CONTEXT OPTIONS ENGINE
+       ======================================================================== */
+    window.promptDestructionChoiceModal = function(msgId) { closeContextMenu(); targetedActionMsgId = msgId; document.getElementById('deleteChoiceOverlay').style.display = 'flex'; };
+
+    /* NEW OPTION LINK INTERFACE METHOD ATTACHMENT: DEPLOY DEVICE DIAGNOSTICS LOG */
+    window.displayDeviceTelemetryDiagnosticsModal = function(msgId) {
+        closeContextMenu();
+        const targetMessageObj = messages.find(m => m.id === msgId);
+        if (!targetMessageObj) return;
+
+        const specsCanvasBox = document.getElementById('deviceSpecsContent');
+        specsCanvasBox.innerHTML = `
+            <b>Packet ID Token:</b> MSG-${targetMessageObj.id}<br>
+            <b>Transmission Link Epoch:</b> ${new Date(targetMessageObj.timestamp).toISOString()}<br>
+            <b>Network Signal Node Path Status:</b> Online-Verified<br>
+            <b>Device Engine Protocol Code:</b> Minimalist Chat Suite Premium v3.2.1<br>
+            <b>Screen View Resolution Stack:</b> ${window.innerWidth}x${window.innerHeight} viewport map
+        `;
+        document.getElementById('deviceSpecsOverlay').style.display = 'flex';
+    };
+
+    document.getElementById('deleteForMeBtn').addEventListener('click', () => {
+        const target = messages.find(m => m.id === targetedActionMsgId);
+        if (target) { if(!target.hiddenForUsers) target.hiddenForUsers = []; target.hiddenForUsers.push(currentUser.id); commitMessagesToLocalStorage(); renderMessagesTrackEngine(); }
+        closeModal('deleteChoiceOverlay');
+    });
+
+    document.getElementById('deleteForEveryoneBtn').addEventListener('click', () => {
+        const target = messages.find(m => m.id === targetedActionMsgId);
+        if (target) {
+            if (target.sender !== currentUser.id) { alert('You can only delete your own sent records for everyone!'); closeModal('deleteChoiceOverlay'); return; }
+            target.text = "🚫 This message was deleted for everyone"; target.msgType = "text"; target.mediaUrl = null;
+            commitMessagesToLocalStorage(); renderMessagesTrackEngine();
+        }
+        closeModal('deleteChoiceOverlay');
+    });
+
+    window.closeModal = function(elementTargetId) { document.getElementById(elementTargetId).style.display = 'none'; };
+
+    /* ========================================================================
+       RENDER ENGINE VISUAL CONSTRUCT DRAW MATRIX LAYER
+       ======================================================================== */
+    function formatTime(timestamp) {
+        if (!timestamp) return '--:--';
+        return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    function renderMessagesTrackEngine() {
+        const viewableMessages = messages.filter(m => !m.hiddenForUsers || !m.hiddenForUsers.includes(currentUser.id));
+        if (viewableMessages.length === 0) { messagesContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#666;">Swipe right on any bubble card to compose a direct reply context.</div>'; return; }
+
+        messagesContainer.innerHTML = viewableMessages.map(msg => {
+            const sentByMe = msg.sender === currentUser.id; const uniqueElementId = `media_element_${msg.id}`;
+            
+            let deliveryInfoStatusString = '';
+            if (sentByMe) {
+                if (msg.status === 'pending') {
+                    deliveryInfoStatusString = `<span class="delivery-status-text pending">Pending</span>`;
+                } else if (msg.status === 'delivered') {
+                    deliveryInfoStatusString = `<span class="delivery-status-text delivered">Delivered</span>`;
+                } else if (msg.status === 'seen') {
+                    deliveryInfoStatusString = `<span class="delivery-status-text seen">Seen by ${otherUser.name}</span>`;
+                }
+            } else {
+                deliveryInfoStatusString = `<span class="delivery-status-text seen">Seen by ${currentUser.name}</span>`;
+            }
+
+            let internalReplyEmbedBlock = '';
+            if (msg.replyToId) {
+                const linkSource = messages.find(origin => origin.id === msg.replyToId);
+                if (linkSource) { internalReplyEmbedBlock = `<div class="nested-reply-preview"><b>${linkSource.sender === currentUser.id ? 'You' : otherUser.name}:</b> ${linkSource.text}</div>`; }
+            }
+
+            let interactiveLayoutPayloadNode = '';
+            if (msg.msgType === 'image') {
+                interactiveLayoutPayloadNode = `
+                    <div class="media-container">
+                        <button class="gallery-save-btn" onclick="saveAssetToLocalGalleryEmulator('${uniqueElementId}', '${msg.text}')">📥 Save</button>
+                        <img src="${msg.mediaUrl}" id="${uniqueElementId}" class="shared-img" alt="Graphics Element Card" />
+                    </div>`;
+            } else if (msg.msgType === 'video') {
+                interactiveLayoutPayloadNode = `
+                    <div class="media-container">
+                        <button class="gallery-save-btn" onclick="saveAssetToLocalGalleryEmulator('${uniqueElementId}', '${msg.text}')">📥 Save</button>
+                        <video src="${msg.mediaUrl}" id="${uniqueElementId}" controls class="shared-video"></video>
+                    </div>`;
+            } else { interactiveLayoutPayloadNode = `<div>${escapeHtmlContentStructure(msg.text)}</div>`; }
+
+            // Dynamic tracking list for exact tracking information updates
+            const sentTimeStr = formatTime(msg.timestamp);
+            const deliveredTimeStr = msg.deliveredTimestamp ? formatTime(msg.deliveredTimestamp) : '--:--';
+            const seenTimeStr = msg.seenTimestamp ? formatTime(msg.seenTimestamp) : '--:--';
+
+            return `
+                <div class="message ${sentByMe ? 'sent' : 'received'}" data-node-id="${msg.id}">
+                    <div class="swipe-reply-bg-indicator">⤺ Reply</div>
+                    <div class="message-wrapper">
+                        <button class="message-options-btn" onclick="displayInteractiveContextMenu(event, ${msg.id})">⋮</button>
+                        <div class="message-content-wrapper">
+                            ${internalReplyEmbedBlock}
+                            <div class="message-content">${interactiveLayoutPayloadNode}</div>
+                            <div class="message-info">
+                                <div class="timestamp-log"><b>Sent:</b> ${sentTimeStr}</div>
+                                <div class="timestamp-log"><b>Delivered:</b> ${deliveredTimeStr}</div>
+                                <div class="timestamp-log"><b>Seen:</b> ${seenTimeStr}</div>
+                                <div style="margin-top: 2px;">${deliveryInfoStatusString}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        document.querySelectorAll('.message').forEach(node => { bindDragToReplyGestures(node, parseInt(node.getAttribute('data-node-id'))); });
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    window.displayInteractiveContextMenu = function(e, msgId) {
+        e.stopPropagation(); closeContextMenu();
+        const ctxMenuHtmlNode = document.createElement('div'); ctxMenuHtmlNode.className = 'message-menu active';
+        
+        ctxMenuHtmlNode.innerHTML = `
+            <button class="message-menu-item" onclick="activateReplyContextAnchor(${msgId}); closeContextMenu();">⤺ Reply Context</button>
+            <button class="message-menu-item" onclick="displayDeviceTelemetryDiagnosticsModal(${msgId})">ℹ️ View Message Logs</button>
+            <button class="message-menu-item" style="color:#d32f2f; font-weight:bold;" onclick="promptDestructionChoiceModal(${msgId})">🗑️ Delete Message</button>
+        `;
+        ctxMenuHtmlNode.style.top = `${e.clientY + 10}px`; ctxMenuHtmlNode.style.left = `${e.clientX - 130}px`;
+        document.body.appendChild(ctxMenuHtmlNode);
+        setTimeout(() => { document.addEventListener('click', closeContextMenu); }, 10);
+    };
+
+    function closeContextMenu() { const liveMenu = document.querySelector('.message-menu.active'); if(liveMenu) { liveMenu.remove(); document.removeEventListener('click', closeContextMenu); } }
+    function commitMessagesToLocalStorage() { localStorage.setItem('chatMessages_suite', JSON.stringify(messages)); }
+    function loadChatMessagesStore() { const stored = localStorage.getItem('chatMessages_suite'); messages = stored ? JSON.parse(stored) : []; }
+    function escapeHtmlContentStructure(text) { return text.replace(/[&<>"']/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[match])); }
+    messageInput.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 80) + 'px'; });
+</script>
+
+</body>
+</html>
